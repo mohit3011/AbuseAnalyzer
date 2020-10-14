@@ -1,0 +1,11 @@
+'''Gathered from multiple sources
+https://en.wikipedia.org/wiki/List_of_ethnic_slurs
+https://github.com/t-davidson/hate-speech-and-offensive-language/blob/master/lexicons/refined_ngram_dict.csv
+https://hatebase.org/search_results/language_id%3Deng
+'''
+
+'hilari', 'funni', 'god', 'jesu', 'joke', 'troll', 'luck', 'bless', 'lol', 'lmao', 'rofl', 'christ', 'sake'
+'stupid', 'retard', 'predat', 'thief', 'robber', 'ugli', 'deform', 'stink', 'cretin', 'slut', 'liar', 'cheap', 'flirt', 'foolish', 'dumb', 'bitter', 'cruel', 'inhuman', 'evil', 'harsh', 'bitch', 'hate', 'whore', 'steal', 'filth', 'dirt', 'beg', 'fuck', 'shit', 'hell', 'abus', 'asshol', 'motherfuck', 'dare', 'corrupt', 'fool'
+'kike', 'dyke', 'nigger', 'black', 'muzzie', 'muslim', 'coon', 'shitskin', 'spic', 'sand', 'gay', 'lesbian', 'transgender', 'jew', 'homosexual', 'african', 'indian', 'yid', 'heeb', 'mussie', 'raghead', 'mick', 'haji', 'hajji', 'fenian', 'chink', 'chinky', 'ape', 'banana', 'cholo', 'cina', 'cushi', 'dago', 'dego', 'guiri', 'goy', 'jap', 'kebab', 'kolorad', 'kraut', 'kaffir', 'kafir', 'nigga', 'pak', 'paki', 'pocho', 'redneck', 'rastus', 'sambo', 'shkije', 'twinkie', 'wetback', 'wigger', 'wop', 'yank', 'yankee', 'islam'
+'warn', 'risk', 'peril', 'scare', 'fear', 'dread', 'horror', 'caution', 'alert', 'menac'
+'kill', 'rape', 'abort', 'genocid', 'bomb', 'execut', 'assassin', 'murder', 'poison', 'slaughter', 'wipe', 'hit', 'slai', 'molest', 'holocaust', 'carnag', 'annihil'
