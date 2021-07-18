@@ -38,7 +38,7 @@ You can also play around the maximum_length of the input through editing the `ma
 
 ### Instructions for using the severity and target of abuse data
 
-You'll first need to filter the rows which have been marked as `Abusive/Hateful` and create a separate tsv file. You can give this file as an argument to the model. For the `label_col` argument provide **3** for `Target of Abuse` experiment and provide **3** for `Severity of Abuse` experiment. For example:
+You'll first need to filter the rows which have been marked as `Abusive/Hateful` and create a separate tsv file. You can give this file as an argument to the model. For the `label_col` argument provide **3** for `Target of Abuse` experiment and provide **4** for `Severity of Abuse` experiment. For example:
 
 * Target of Abuse experiment: run `python3 BERT_Classifier.py --datafile "provide new filename" --label_col 3`
 * Severity of Abuse experiment: run `python3 BERT_Classifier.py --datafile "provide new filename" --label_col 4`
