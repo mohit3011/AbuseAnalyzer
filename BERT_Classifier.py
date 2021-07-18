@@ -24,7 +24,6 @@ from sklearn.utils import class_weight
 from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import StratifiedKFold
 from text_preprocessing import *
-from testing import *
 from transformers import BertConfig
 from transformers import BertTokenizer
 
