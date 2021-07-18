@@ -12,12 +12,9 @@ import torch.nn.functional as F
 from transformers import BertModel
 import torch.optim as optim
 import numpy as np
-from tensorflow.keras.models import model_from_json
-# from onnx2keras import onnx2keras
-import cv2
+
 import os,sys,re
-import tensorflow as tf
-from tensorflow import keras
+
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
@@ -25,14 +22,12 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import class_weight
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras import optimizers
 from sklearn.model_selection import StratifiedKFold
 from text_preprocessing import *
 from testing import *
 from transformers import BertConfig
 from transformers import BertTokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.callbacks import EarlyStopping
+
 import statistics
 import time
 import copy
