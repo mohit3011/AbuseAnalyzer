@@ -32,7 +32,7 @@ Repository for our paper "AbuseAnalyzer: Abuse Detection, Severity and Target Pr
 * argparse
 * pandas
 
-To run the file copy the following command **`python3 BERT_Classifier.py --datafile ../AbuseAnalyzer_Dataset.tsv --label_col 2`**
+To run the file copy the following command **`python3 BERT_Classifier.py --datafile ../AbuseAnalyzer_Dataset.tsv --label_col 2`** . Aquick verification can be performed while looking at the number of examples that have been processed (for binary classification, number of examples=7,601)
 
 You can also play around the maximum_length of the input through editing the `max_len` variable in the file (our paper uses 100) and number of `epochs` (our paper uses 15).
 
@@ -40,8 +40,8 @@ You can also play around the maximum_length of the input through editing the `ma
 
 You'll first need to filter the rows which have been marked as `Abusive/Hateful` and create a separate tsv file. You can give this file as an argument to the model. For the `label_col` argument provide **3** for `Target of Abuse` experiment and provide **4** for `Severity of Abuse` experiment. For example:
 
-* Target of Abuse experiment: run `python3 BERT_Classifier.py --datafile "provide new filename" --label_col 3`
-* Severity of Abuse experiment: run `python3 BERT_Classifier.py --datafile "provide new filename" --label_col 4`
+* Target of Abuse experiment: run `python3 BERT_Classifier.py --datafile "provide new filename" --label_col 3`. Please check that the number of examples=4120.
+* Severity of Abuse experiment: run `python3 BERT_Classifier.py --datafile "provide new filename" --label_col 4`. Please check that the number of examples=4120.
 
 For both of the above mentioned experiments, we have used `epochs=20` and have kept the other hyperparameters same.
 
