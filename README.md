@@ -21,6 +21,30 @@ Repository for our paper "AbuseAnalyzer: Abuse Detection, Severity and Target Pr
 
 **Note** : The usermentions in the dataset have been changed to `@usermention` for privacy and ethical reasons.
 
+## Instructions for the Script/Model
+
+`code_files/BERT_Classifier.py` contains the model file. To run the model you'll need the GPU support (CUDA). Additionally the following are the required libraries:
+* pytorch
+* tensorflow.keras
+* numpy
+* transformers
+* scikit-learn
+* argparse
+* pandas
+
+To run the file copy the following command **`python3 BERT_Classifier.py --datafile ../AbuseAnalyzer_Dataset.tsv --label_col 2`**
+
+You can also play around the maximum_length of the input through editing the `max_len` variable in the file (our paper uses 100) and number of `epochs` (our paper uses 15).
+
+### Instructions for using the severity and target of abuse data
+
+You'll first need to filter the rows which have been marked as `Abusive/Hateful` and create a separate tsv file. You can give this file as an argument to the model. For the `label_col` argument provide **3** for `Target of Abuse` experiment and provide **3** for `Severity of Abuse` experiment. For example:
+
+* Target of Abuse experiment: run `python3 BERT_Classifier.py --datafile "provide new filename" --label_col 3`
+* Severity of Abuse experiment: run `python3 BERT_Classifier.py --datafile "provide new filename" --label_col 4`
+
+For both of the above mentioned experiments, we have used `epochs=20` and have kept the other hyperparameters same.
+
 ## Citation
 
 * If you use/refer the dataset and/or code presented in this paper, then kindly cite our work using the following BibTeX:
