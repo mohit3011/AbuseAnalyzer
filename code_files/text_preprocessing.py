@@ -13,8 +13,9 @@ def read_csv_file(file_name, data_col, label_col):
     with open(file_name, 'r') as csv_reader:
         reader = csv.reader(csv_reader, delimiter='\t')
         for line_number, row in enumerate(reader):
-            data_list.append(row[data_col])
-            label_list.append(row[label_col])
+            if line_number!=0:
+                data_list.append(row[data_col])
+                label_list.append(row[label_col])
 
     return data_list, label_list
 

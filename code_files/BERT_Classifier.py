@@ -33,9 +33,23 @@ import copy
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
+import argparse
+from argparse import ArgumentParser
+
+
 # In[2]:
 
 torch.manual_seed(42)
+
+parser = ArgumentParser()
+
+parser.add_argument('--datafile', default="../AbuseAnalyzer_Dataset.tsv",
+                    help='Input file.')
+parser.add_argument('--label_col', default="2",
+                    help='Column Number for the Labels')
+args = parser.parse_args()
+
+
 
 def make_bert_input(data, max_len):
     # For every sentence...
@@ -46,6 +60,7 @@ def make_bert_input(data, max_len):
         encoded_dict = tokenizer.encode_plus(
                             sent,                      # Sentence to encode.
                             add_special_tokens = True, # Add '[CLS]' and '[SEP]'
+                            truncation=True,
                             max_length = max_len,           # Pad & truncate all sentences.
                             pad_to_max_length = True,
                             return_attention_mask = True,   # Construct attn. masks.
@@ -140,6 +155,7 @@ def train_loop(dataloaders, dataset_sizes,  num_classes, config=None, epochs=1):
     criterion = torch.nn.CrossEntropyLoss(weight=class_weights_labels)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, eps=1e-08) # clipnorm=1.0, add later
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #device = "cpu"
     model.to(device)
     
     since = time.time()
@@ -214,125 +230,125 @@ def train_loop(dataloaders, dataset_sizes,  num_classes, config=None, epochs=1):
 
 # In[7]:
 
+if __name__ == '__main__':
 
-datafile = "Abuse_Analyzer_new.tsv"
-data_col = 0
-label_col = 2
-max_len = 100
-skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-acc_cum = 0
-rec_cum = 0
-pre_cum = 0
-f1_cum = 0
-f1_cum_mic = 0
-acc_arr = []
-rec_arr = []
-pre_arr = []
-f1_arr = []
-f1_arr_mic = []
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased',do_lower_case=True, add_special_tokens=True, max_length=max_len, pad_to_max_length=True)
+    datafile = args.datafile
+    data_col = 0
+    label_col = int(args.label_col)
+    max_len = 100
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    acc_cum = 0
+    rec_cum = 0
+    pre_cum = 0
+    f1_cum = 0
+    f1_cum_mic = 0
+    acc_arr = []
+    rec_arr = []
+    pre_arr = []
+    f1_arr = []
+    f1_arr_mic = []
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased',do_lower_case=True, add_special_tokens=True, max_length=max_len, pad_to_max_length=True)
 
-#------------------------------------------------------------------------------------------------
-text_data, labels = prepare_dataset(datafile, data_col, label_col, "word-based")
+    #------------------------------------------------------------------------------------------------
+    text_data, labels = prepare_dataset(datafile, data_col, label_col, "word-based")
 
-print("Number of Examples: ", len(text_data))
+    print("Number of Examples: ", len(text_data))
 
-encoder = LabelEncoder()
-encoder.fit(labels)
-encoded_labels = encoder.transform(labels)
-class_weights_labels = class_weight.compute_class_weight('balanced',
-                                             np.unique(encoded_labels),
-                                             encoded_labels)
+    encoder = LabelEncoder()
+    encoder.fit(labels)
+    encoded_labels = encoder.transform(labels)
+    class_weights_labels = class_weight.compute_class_weight('balanced',
+                                                 np.unique(encoded_labels),
+                                                 encoded_labels)
 
-num_classes = len(list(encoder.classes_))
-print("num_classes: ", num_classes)
-print(encoder.classes_)
-config = BertConfig.from_pretrained('bert-base-uncased')
-config.output_hidden_states = False
-
-
-fold_number = 1
-
-new_data = make_bert_input(text_data, max_len)
-
-## Add image input to new_data, flatten images then unflatten later
-
-encoded_labels = np.asarray(encoded_labels, dtype='int32')
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-class_weights_labels = torch.tensor(class_weights_labels, dtype=torch.float, device=device)
-
-for train_index, test_index in skf.split(new_data, encoded_labels):
-    print("Running fold #", fold_number)
-    train_data, test_data = new_data[train_index], new_data[test_index]
-    train_label, test_label = encoded_labels[train_index], encoded_labels[test_index]
-    train_data, validation_data, train_label, validation_label = train_test_split(train_data, train_label, stratify=train_label, test_size=0.2, random_state=42)
-    
-    train_label = to_categorical(train_label)
-    validation_label = to_categorical(validation_label)
-    metric_test = np.copy(test_label)
-    test_label = to_categorical(test_label)
-
-    train_text_input_ids = np.copy(train_data[:,0:max_len])
-    validation_text_input_ids = np.copy(validation_data[:,0:max_len])
-    test_text_input_ids = np.copy(test_data[:,0:max_len])
-    train_text_attention_mask = np.copy(train_data[:,max_len:2*max_len])
-    validation_text_attention_mask = np.copy(validation_data[:,max_len:2*max_len])
-    test_text_attention_mask = np.copy(test_data[:,max_len:2*max_len])
-
-    training_set = Dataset(train_text_input_ids, train_text_attention_mask, train_label)
-    validation_set = Dataset(validation_text_input_ids, validation_text_attention_mask, validation_label)
-    test_set = Dataset(test_text_input_ids, test_text_attention_mask, test_label)
-
-    dataloaders = {
-        'train' : torch.utils.data.DataLoader(training_set, batch_size=4,
-                                             shuffle=True, num_workers=2, drop_last=True),
-        'validation' : torch.utils.data.DataLoader(validation_set, batch_size=4,
-                                             shuffle=True, num_workers=2, drop_last=True)
-    }
-
-    dataset_sizes = {
-        'train': len(training_set),
-        'validation': len(validation_set),
-    }
-
-    model = train_loop(dataloaders, dataset_sizes, num_classes, config=config, epochs=15)
-    #         save_models(fold_number, model)
-
-    #new_test_data = Dataset(test_data[:,0:max_len], test_data[:,max_len:2*max_len], test_data[:,3*max_len:4*max_len], test_data[:,4*max_len:5*max_len], test_label)
-
-    y_pred = np.array([])
-
-    for i in tqdm(range(len(test_set))):
-        inputs = torch.Tensor([test_set[i][0]]).to(device)
-        model.eval()
-        outputs = model(inputs)
-        preds = torch.max(outputs, 1)[1]
-        y_pred = np.append(y_pred, preds.cpu().numpy())
-
-    acc_arr.append(accuracy_score(metric_test, y_pred))
-    acc_cum += acc_arr[fold_number-1]
-    rec_arr.append(recall_score(metric_test, y_pred, average='macro'))
-    rec_cum += rec_arr[fold_number-1]
-    pre_arr.append(precision_score(metric_test, y_pred, average='macro'))
-    pre_cum += pre_arr[fold_number-1]
-    f1_arr.append(f1_score(metric_test, y_pred, average='macro'))
-    f1_cum  += f1_arr[fold_number-1]
-    f1_arr_mic.append(f1_score(metric_test, y_pred, average='micro'))
-    f1_cum_mic  += f1_arr_mic[fold_number-1]
-    fold_number+=1
-
-print("Accuracy: ", acc_cum/5)
-print("Recall: ", rec_cum/5)
-print("Precision: ", pre_cum/5)
-print("F1 score: ", f1_cum/5)
-print("F1 score Micro: ", f1_cum_mic/5)
-
-print("------------------------------")
-print("Accuracy_stdev: ", statistics.stdev(acc_arr))
-print("Recall_stdev: ", statistics.stdev(rec_arr))
-print("Precision_stdev: ", statistics.stdev(pre_arr))
-print("F1 score_stdev: ", statistics.stdev(f1_arr))
-print("F1 score_stdev Micro: ", statistics.stdev(f1_arr_mic))
+    num_classes = len(list(encoder.classes_))
+    print("num_classes: ", num_classes)
+    print(encoder.classes_)
+    config = BertConfig.from_pretrained('bert-base-uncased')
+    config.output_hidden_states = False
 
 
-# In[ ]:
+    fold_number = 1
+
+    new_data = make_bert_input(text_data, max_len)
+
+    ## Add image input to new_data, flatten images then unflatten later
+
+    encoded_labels = np.asarray(encoded_labels, dtype='int32')
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #device = "cpu"
+    class_weights_labels = torch.tensor(class_weights_labels, dtype=torch.float, device=device)
+
+    for train_index, test_index in skf.split(new_data, encoded_labels):
+        print("Running fold #", fold_number)
+        train_data, test_data = new_data[train_index], new_data[test_index]
+        train_label, test_label = encoded_labels[train_index], encoded_labels[test_index]
+        train_data, validation_data, train_label, validation_label = train_test_split(train_data, train_label, stratify=train_label, test_size=0.2, random_state=42)
+        
+        train_label = to_categorical(train_label)
+        validation_label = to_categorical(validation_label)
+        metric_test = np.copy(test_label)
+        test_label = to_categorical(test_label)
+
+        train_text_input_ids = np.copy(train_data[:,0:max_len])
+        validation_text_input_ids = np.copy(validation_data[:,0:max_len])
+        test_text_input_ids = np.copy(test_data[:,0:max_len])
+        train_text_attention_mask = np.copy(train_data[:,max_len:2*max_len])
+        validation_text_attention_mask = np.copy(validation_data[:,max_len:2*max_len])
+        test_text_attention_mask = np.copy(test_data[:,max_len:2*max_len])
+
+        training_set = Dataset(train_text_input_ids, train_text_attention_mask, train_label)
+        validation_set = Dataset(validation_text_input_ids, validation_text_attention_mask, validation_label)
+        test_set = Dataset(test_text_input_ids, test_text_attention_mask, test_label)
+
+        dataloaders = {
+            'train' : torch.utils.data.DataLoader(training_set, batch_size=4,
+                                                 shuffle=True, num_workers=2, drop_last=True),
+            'validation' : torch.utils.data.DataLoader(validation_set, batch_size=4,
+                                                 shuffle=True, num_workers=2, drop_last=True)
+        }
+
+        dataset_sizes = {
+            'train': len(training_set),
+            'validation': len(validation_set),
+        }
+
+        model = train_loop(dataloaders, dataset_sizes, num_classes, config=config, epochs=15)
+        
+
+        y_pred = np.array([])
+
+        for i in tqdm(range(len(test_set))):
+            inputs = torch.Tensor([test_set[i][0]]).to(device)
+            model.eval()
+            outputs = model(inputs)
+            preds = torch.max(outputs, 1)[1]
+            y_pred = np.append(y_pred, preds.cpu().numpy())
+
+        acc_arr.append(accuracy_score(metric_test, y_pred))
+        acc_cum += acc_arr[fold_number-1]
+        rec_arr.append(recall_score(metric_test, y_pred, average='macro'))
+        rec_cum += rec_arr[fold_number-1]
+        pre_arr.append(precision_score(metric_test, y_pred, average='macro'))
+        pre_cum += pre_arr[fold_number-1]
+        f1_arr.append(f1_score(metric_test, y_pred, average='macro'))
+        f1_cum  += f1_arr[fold_number-1]
+        f1_arr_mic.append(f1_score(metric_test, y_pred, average='micro'))
+        f1_cum_mic  += f1_arr_mic[fold_number-1]
+        fold_number+=1
+
+    print("Accuracy: ", acc_cum/5)
+    print("Recall: ", rec_cum/5)
+    print("Precision: ", pre_cum/5)
+    print("F1 score: ", f1_cum/5)
+    print("F1 score Micro: ", f1_cum_mic/5)
+
+    print("------------------------------")
+    print("Accuracy_stdev: ", statistics.stdev(acc_arr))
+    print("Recall_stdev: ", statistics.stdev(rec_arr))
+    print("Precision_stdev: ", statistics.stdev(pre_arr))
+    print("F1 score_stdev: ", statistics.stdev(f1_arr))
+    print("F1 score_stdev Micro: ", statistics.stdev(f1_arr_mic))
+
+
+    # In[ ]:
